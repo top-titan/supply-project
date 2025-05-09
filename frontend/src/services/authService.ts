@@ -99,3 +99,9 @@ export const logoutUser = (): Promise<void> => {
     }, 500);
   });
 };
+
+// Add this function if it doesn't exist
+export const getAuthHeader = () => {
+  const token = localStorage.getItem("token");
+  return { Authorization: `Bearer ${token}` };
+};
