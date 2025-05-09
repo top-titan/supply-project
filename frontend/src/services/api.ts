@@ -1,4 +1,4 @@
-import axios, { AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
+import axios, { AxiosRequestConfig, AxiosResponse, AxiosError, InternalAxiosRequestConfig } from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -7,11 +7,12 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true
 });
 
 // Request interceptor for adding auth token
 api.interceptors.request.use(
-  (config: AxiosRequestConfig) => {
+  (config: InternalAxiosRequestConfig) => {
     const token = localStorage.getItem('token');
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -39,10 +40,20 @@ api.interceptors.response.use(
 export const authService = {
   login: async (email: string, password: string) => {
     const response = await api.post('/auth/login', { email, password });
+    if (response.data.token) {
+      localStorage.setItem('token', response.data.token);
+    }
     return response.data;
   },
   register: async (userData: any) => {
     const response = await api.post('/auth/register', userData);
+    if (response.data.token) {
+      localStorage.setItem('token', response.data.token);
+    }
+    return response.data;
+  },
+  getProfile: async () => {
+    const response = await api.get('/auth/profile');
     return response.data;
   },
   logout: () => {
@@ -51,12 +62,16 @@ export const authService = {
 };
 
 export const userService = {
-  getProfile: async () => {
-    const response = await api.get('/users/profile');
+  getAll: async () => {
+    const response = await api.get('/users');
     return response.data;
   },
-  updateProfile: async (userData: any) => {
-    const response = await api.put('/users/profile', userData);
+  update: async (id: string, userData: any) => {
+    const response = await api.put(`/users/${id}`, userData);
+    return response.data;
+  },
+  delete: async (id: string) => {
+    const response = await api.delete(`/users/${id}`);
     return response.data;
   },
 };

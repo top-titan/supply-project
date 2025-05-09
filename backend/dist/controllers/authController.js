@@ -13,11 +13,14 @@ const generateToken = (id) => {
     });
 };
 // @desc    Register a new user
-// @route   POST /api/users
+// @route   POST /api/auth/register
 // @access  Public
 const registerUser = async (req, res) => {
-    const { name, email, password } = req.body;
     try {
+        const { name, email, password } = req.body || {};
+        if (!name || !email || !password) {
+            return res.status(400).json({ message: "Please provide all required fields" });
+        }
         const userExists = await User_1.default.findOne({ email });
         if (userExists) {
             return res.status(400).json({ message: "User already exists" });
@@ -48,11 +51,14 @@ const registerUser = async (req, res) => {
 };
 exports.registerUser = registerUser;
 // @desc    Auth user & get token
-// @route   POST /api/users/login
+// @route   POST /api/auth/login
 // @access  Public
 const loginUser = async (req, res) => {
-    const { email, password } = req.body;
     try {
+        const { email, password } = req.body || {};
+        if (!email || !password) {
+            return res.status(400).json({ message: "Please provide email and password" });
+        }
         const user = await User_1.default.findOne({ email });
         if (user && (await user.matchPassword(password))) {
             const userObj = user.toObject();
@@ -75,11 +81,14 @@ const loginUser = async (req, res) => {
 };
 exports.loginUser = loginUser;
 // @desc    Get user profile
-// @route   GET /api/users/profile
+// @route   GET /api/auth/profile
 // @access  Private
 const getUserProfile = async (req, res) => {
     try {
-        const user = await User_1.default.findById(req.user?._id);
+        if (!req.user?._id) {
+            return res.status(401).json({ message: "Not authorized" });
+        }
+        const user = await User_1.default.findById(req.user._id);
         if (user) {
             const userObj = user.toObject();
             res.json({
